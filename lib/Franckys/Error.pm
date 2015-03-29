@@ -1,15 +1,15 @@
 #===============================================================================
 #
-#         FILE: <+FILENAME+>
+#         FILE: Franckys/Error.pm
 #
-#        USAGE: <+USAGE+>
+#        USAGE: use Franckys::Error;
 #
-#  DESCRIPTION: <+DESCRIPTION+>
+#  DESCRIPTION: Provide a simple, yet complete error mechanism
 #
-#      OPTIONS: <+OPTIONS+>
-# REQUIREMENTS: <+REQUIREMENTS+>
-#         BUGS: <+BUGS+>
-#        NOTES: <+NOTES+>
+#      OPTIONS:
+# REQUIREMENTS: Perl6::Export::Attrs;
+#         BUGS: Not so far 
+#        NOTES: Developped for project: MUTINY Tahiti
 #
 #       AUTHOR: Franck Porcher, Ph.D. - franck.porcher@franckys.com
 # ORGANIZATION: Franckys
