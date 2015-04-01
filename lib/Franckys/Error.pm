@@ -34,11 +34,12 @@ use Carp                qw( carp croak confess cluck );
 # UTF8 STUFF
 #----------------------------------------------------------------------------
 use utf8;
-use warnings            FATAL => "utf8";
+use warnings            FATAL => 'utf8';
 use charnames           qw( :full :short );
 use Encode              qw( encode decode );
 use Unicode::Collate;
 use Unicode::Normalize  qw( NFD NFC );
+use Const::Fast;
 
 #----------------------------------------------------------------------------
 # I/O
@@ -125,6 +126,21 @@ use version; our $VERSION = 'v0.11';           # Keep on same line
 
     main();
 
+=head1 DESCRIPTION
+
+This modules provides a simple API to handle errors in a constructive fashion.
+
+Mainly the ability to return an B<Error> object as a function's value along with
+a functional value to signal an error to the caller.
+
+Doing so, you no longer need to worry about deciding whether to ignore the error,
+to report it in a cumbersome fashion, probably using "$@", or to ignore the functional
+value : you can do both !
+
+Further than that, you can even report multiple errors in a single run, since 
+an B<Error> object is designed to withstand cumulative errors in an orderly fashion.
+
+See the example above.
 
 =head1 EXPORT
 
@@ -144,7 +160,7 @@ The following functions are exported by default :
 =back
 
 
-=head1 SUBROUTINES AND METHODS
+=head1 SUBROUTINES/METHODS
 
 =cut
 
@@ -154,8 +170,10 @@ The following functions are exported by default :
 #----------------------------------------------------------------------------
 # CONSTANTS
 
+const my $EMPTY_STRING => '';
+
 # GLOBALS
-my %ErrMsg = (
+my %ERR_MSG = (
     EARG    => 'Missing argument:[%s]',
     ELIB    => 'Cannot use library:[%s] - %s',
     ENOTAG  => 'Missing tag. Params:[%s]',
@@ -192,7 +210,8 @@ Allows to define custom errors or redefine default errors.
 
 sub def_error :Export(:DEFAULT) {
     my ($error_tag, $error_fmt) = @_;
-    $ErrMsg{ $error_tag } = $error_fmt;
+    $ERR_MSG{ $error_tag } = $error_fmt;
+    return $error_tag;
 }
 
 
@@ -251,6 +270,8 @@ Whenever an I<$Error> argument is provided, it is aggregated as follows :
 =cut
 
 sub Error :Export(:DEFAULT) {
+    my ($error, $errtag, $param, $datum) = @_;
+
     # Request for a default error object
     return bless {
                 tag     => undef,
@@ -260,24 +281,21 @@ sub Error :Export(:DEFAULT) {
             } => __PACKAGE__
         unless @_;
 
-    # Initial error event
-    my ($error, $errtag, $param, $datum) = @_;
-
-    my $pkg = blessed $error || '';
-    unless ( $pkg eq __PACKAGE__ ) {
-        my $error = Error();
+    my $pkg = blessed $error || $EMPTY_STRING;
+    if ( $pkg ne __PACKAGE__ ) {
+        $error = Error();
         return $error->Error(@_);
     }
 
     # Parameters
     my @params
-        = !blessed($param) && ((reftype($param) || '') eq 'ARRAY')      ? @$param 
-        : defined($param)                                               ? $param
-        :                                                                 ()
+        = !blessed($param) && ((reftype($param) || $EMPTY_STRING) eq 'ARRAY')   ? @{$param}
+        : defined($param)                                                       ? $param
+        :                                                                       ()
         ;
 
     # Record error event
-    unless ( $errtag && exists $ErrMsg{$errtag} ) {
+    unless ( $errtag && exists $ERR_MSG{$errtag} ) {
         if ($errtag) {
             @params = ($errtag, "@params");
             $errtag = 'ETAG';
@@ -290,9 +308,9 @@ sub Error :Export(:DEFAULT) {
 
     my $errmsg
         = sprintf(
-            '(%s) %s', 
+            '(%s) %s',
             $errtag,
-            sprintf( $ErrMsg{$errtag}, @params ),
+            sprintf( $ERR_MSG{$errtag}, @params ),
     );
 
     # Aggregate
@@ -362,7 +380,10 @@ Returns the error tag of the B<Error> object.
 
 =cut
 
-sub tag { return $_[0]{tag} }
+sub tag {
+    my $error = shift;
+    return $error->{tag};
+}
 
 
 ###
@@ -377,7 +398,10 @@ Returns the positive number of error events recorded within the B<Error> object.
 
 =cut
 
-sub nb_errors { return : $_[0]->{n} }
+sub nb_errors {
+    my $error = shift;
+    return $error->{n};
+}
 
 
 ###
@@ -414,7 +438,7 @@ There are therefore two ways to get to the second error message :
 
 =cut
 
-sub msgs { 
+sub msgs {
     my $self = shift;
 
     return wantarray
@@ -435,8 +459,9 @@ Returns the last error message in any context
 
 =cut
 
-sub as_string { 
-    $_[0]{msg}[-1];
+sub as_string {
+    my $error = shift;
+    return $error->{msg}[-1];
 }
 
 ###
@@ -458,7 +483,7 @@ In list context, filters or returns them all.
 
 =cut
 
-sub data { 
+sub data {
     my $self = shift;
 
     return wantarray
@@ -485,11 +510,17 @@ __END__
 
 =back
 
-
 =head1 AUTHOR
 
 Franck PORCHER,PhD, C<< <franck.porcher at franckys.com> >>
 
+=head1 DIAGNOSTICS
+
+Successfully tested against Perl 5.14, 5.16, 5.18 and 5.20.
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+Successfully tested on FreeBSD (9.0+), Debian Linux, and Apple OS X Mountain Lion.
 
 =head1 BUGS AND LIMITATIONS
 
