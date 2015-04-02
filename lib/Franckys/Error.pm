@@ -21,7 +21,7 @@
 # Tous droits réservés - All rights reserved
 #===============================================================================
 package Franckys::Error;
-use v5.16;                                   ## no critic (ValuesAndExpressions::ProhibitVersionStrings)
+use 5.16.0;             ## no critic (ValuesAndExpressions::ProhibitVersionStrings)
 use strict;
 use warnings;
 use autodie;
@@ -63,11 +63,11 @@ Franckys::Error - A simple Error reporting mechanism
 
 =head1 VERSION
 
-Version 0.11
+Version 0.1.1
 
 =cut
 
-use version; our $VERSION = 'v0.11';           # Keep on same line
+use version; our $VERSION = qv('0.1.1');           # Keep on same line
 
 
 =pod
@@ -76,7 +76,7 @@ use version; our $VERSION = 'v0.11';           # Keep on same line
 
     use Franckys::Error;
 
-    use 5.16;
+    use 5.16.0;
     use feature 'say';
 
     # Custom Error
