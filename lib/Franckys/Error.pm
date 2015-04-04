@@ -30,6 +30,7 @@ use feature             qw( switch say unicode_strings );
 use Scalar::Util        qw(blessed reftype);
 use Carp                qw( carp croak confess cluck );
 
+
 #----------------------------------------------------------------------------
 # UTF8 STUFF
 #----------------------------------------------------------------------------
@@ -41,15 +42,18 @@ use Unicode::Collate;
 use Unicode::Normalize  qw( NFD NFC );
 use Const::Fast;
 
+
 #----------------------------------------------------------------------------
 # I/O
 #----------------------------------------------------------------------------
 use open qw( :encoding(UTF-8) :std );
 
+
 #----------------------------------------------------------------------------
 # EXPORTED STUFF
 #----------------------------------------------------------------------------
 use Perl6::Export::Attrs;
+
 
 #----------------------------------------------------------------------------
 # POD
@@ -77,54 +81,81 @@ use version; our $VERSION = qv('0.1.1');           # Keep on same line
     use Franckys::Error;
 
     use 5.16.0;
+    use strict;
+    use warnings;
     use feature 'say';
 
-    # Custom Error
-    def_error( 'WARNING',   'Some files could not be opened');
-    def_error( 'WFILE',     "\t%s");
+    ##
+    # Define some custom errors
+    #
+    def_error('WARNING',   'Some files could not be opened');
+    def_error('WFILE',     "\t%s");
 
-    # Polymorphic function : returns an arrayref of file handlers or an Error object
+    ##
+    # A function that takes a list of files to open
+    # and returns either a "filename -> filehandler" hashref 
+    # or an Error object (polymorphism).
+    #
     sub open_files {
         my @files = @_;
-        my @fh    = ();
-    
+        my %fh    = ();
+
         # Get a cumulative Error Object
         my $error   = Error();
 
         # Open my files for reading
-        foreach my $filename ( @ARGV ) {
-            $error->Error('ESTAT', $filename, \@h) && next
+        foreach my $filename ( @files ) {
+            ($error->Error('ESTAT', $filename, \%fh) && next)
                 unless -f $filename;
 
-            open my $fh, '<', $filename
-                or $error->Error('EOPEN', $filename, \@h);
+            if ( open my $fh, '<', $filename ) {
+                $fh{ $filename } = $fh;
+            }
+            else {
+                $error->Error('EOPEN', $filename, \%fh);
+            }
         }
 
-        return $error->nb_errors > 0 ? $error : \@h;
+        # Polymorphic return
+        return $error->nb_errors > 0 ? $error : \%fh;
     }
 
     sub main {
-        my $data = open_files( @ARGV ) ;
+        my $handlers = open_files( @_ ) ;
+    
+        if ( is_error( $handlers ) ) {
+            # $handlers is an Error object
         
-        if ( is_error( $data ) ) {
             # Retrieve the custom datum set by open_files()
-            my $file_handlers = $data->data();
+            my $datum = $handlers->data();
 
             # Die if no file handler at all was opened
-            die_if_error($data)
-                unless @$file_handlers;
+            die_if_error($handlers)
+                unless %$datum;
 
             # Generate warnings otherwise and go on with the business
-            say Error('WARNING')->as-string();
-            say Error('WFILE', $_)->as-string() foreach $data->msgs();
+            say Error('WARNING')->as_string();
+            say Error('WFILE', $_)->as_string() foreach $handlers->msgs();
 
-            $data = $file_handlers;
+            # Attach whatever valid file handlers
+            $handlers = $datum;
         }
 
-        ...
+        foreach my $filename ( sort keys %$handlers ) {
+            say "Now handling: $filename... done.";
+            close $handlers->{ $filename };
+        }
     }
 
-    main();
+    ##
+    # Draw a file list from current directory
+    # adding fakes in the process
+    my @files = map {
+            chomp;
+            ("$_", "${_}.nofile") 
+        } qx(ls *);
+
+    main(@files);
 
 =head1 DESCRIPTION
 
