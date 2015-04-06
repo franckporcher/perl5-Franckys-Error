@@ -348,12 +348,12 @@ sub Error :Export(:DEFAULT) {
     if ( (my $n = $error->{n}) == 0 ){
         $error->{tag  }    = $errtag;
         $error->{datum}[0] = $datum;
-        $error->{msg  }[0] = $errmsg;
+        $error->{msgs }[0] = $errmsg;
         $error->{n    }    = 1;
     }
     else {
         $error->{datum}[$n] = $datum;
-        $error->{msg  }[$n] = $errmsg;
+        $error->{msgs }[$n] = $errmsg;
         $error->{n    }++;
     }
 
@@ -474,7 +474,7 @@ sub msgs {
 
     return wantarray
         ?  (
-                @_ ? (@{ $self->{msg} })[@_] : @{$self->{msg}}
+                @_ ? (@{ $self->{msgs} })[@_] : @{$self->{msgs}}
            )
         : $self->as_string();
 }
@@ -492,7 +492,7 @@ Returns the last error message in any context
 
 sub as_string {
     my $error = shift;
-    return $error->{msg}[-1];
+    return $error->{msgs}[-1];
 }
 
 ###

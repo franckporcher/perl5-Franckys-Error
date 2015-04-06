@@ -2,9 +2,6 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-  'VERSION_FROM' => 'lib/Franckys/Error.pm',
-  'EXE_FILES' => [],
-  'NAME' => 'Franckys::Error',
   'PL_FILES' => {},
   'INSTALLDIRS' => 'site',
   'PREREQ_PM' => {
@@ -12,6 +9,9 @@ WriteMakefile
                    'Test::Output' => 0,
                    'Scalar::Util' => 0,
                    'Perl6::Export::Attrs' => 0
-                 }
+                 },
+  'EXE_FILES' => [],
+  'NAME' => 'Franckys::Error',
+  'VERSION_FROM' => 'lib/Franckys/Error.pm'
 )
 ;
