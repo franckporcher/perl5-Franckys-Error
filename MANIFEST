@@ -1,3 +1,5 @@
+.perlerror.fetch
+.perlerror.preinstall
 Build.PL
 Changes
 lib/Franckys/Error.pm

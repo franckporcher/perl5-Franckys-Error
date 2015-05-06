@@ -16,3 +16,8 @@ pod2htm*.tmp
 pm_to_blib
 Franckys-Error-*
 Franckys-Error-*.tar.gz
+.perlerror.config
+.perlerror.install
+.perlerror.midinstall
+.perlerror.postinstall
+.perlerror.submodules
